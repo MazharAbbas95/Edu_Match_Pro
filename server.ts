@@ -11,6 +11,7 @@ import authRoutes from "./src/server/routes/authRoutes";
 import assessmentRoutes from "./src/server/routes/assessmentRoutes";
 import testRoutes from "./src/server/routes/testRoutes";
 import interviewRoutes from "./src/server/routes/interviewRoutes";
+import contactRoutes from "./src/server/routes/contactRoutes";
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   // 1. Security Middleware
   app.use(helmet({
@@ -33,10 +34,11 @@ async function startServer() {
     app.use(morgan("dev"));
   }
 
-  // 3. Database Connection
+  // 3. Database Connection (Switched to Local File Database)
+  /*
   const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
-    console.warn("\x1b[33m%s\x1b[0m", "WARNING: MONGODB_URI is not defined. The backend will fail on database operations.");
+    console.warn("\x1b[33m%s\x1b[0m", "WARNING: MONGODB_URI is not defined.");
   } else {
     try {
       await mongoose.connect(MONGODB_URI);
@@ -45,12 +47,15 @@ async function startServer() {
       console.error("MongoDB connection error:", err);
     }
   }
+  */
+  console.log("\x1b[32m%s\x1b[0m", "Using Local File Database (data/users.json)");
 
   // 4. API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/assessment", assessmentRoutes);
   app.use("/api/test", testRoutes);
   app.use("/api/interview", interviewRoutes);
+  app.use("/api/contact", contactRoutes);
 
   app.get("/api/health", (req, res) => {
     res.json({ 

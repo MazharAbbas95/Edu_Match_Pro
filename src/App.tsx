@@ -14,6 +14,11 @@ import { Signup } from "./pages/Signup";
 import { FEATURES, STEPS } from "./constants";
 
 import { About } from "./pages/About";
+import { Terms } from "./pages/Terms";
+import { Privacy } from "./pages/Privacy";
+import { Contact } from "./pages/Contact";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 
 const Home = ({ navigateTo }: { navigateTo: (path: string) => void }) => (
   <>
@@ -29,7 +34,7 @@ export default function App() {
 
   const handleNavigate = (page: string) => {
     // If it's a legacy page key, map it to a route, otherwise use it directly
-    const route = ['home', 'assessment', 'test', 'interview', 'about'].includes(page) 
+    const route = ['home', 'assessment', 'test', 'interview', 'about', 'terms', 'privacy', 'contact'].includes(page) 
       ? (page === 'home' ? '/' : `/${page}`) 
       : page;
     navigate(route);
@@ -49,6 +54,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home navigateTo={handleNavigate} />} />
           <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/assessment" element={<CareerAssessment />} />
           <Route path="/test" element={<AdaptiveTest />} />
           <Route path="/interview" element={<InterviewSimulator />} />

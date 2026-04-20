@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "1776654970193",
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "$2b$10$9OVtYKUQVBza8Hi7E2pbauXMLfOYd8N.bNApGREDgPZrC7m1PB1J2",
+    "createdAt": "2026-04-20T03:16:10.193Z",
+    "updatedAt": "2026-04-20T03:16:10.193Z"
+  },
+  {
+    "_id": "1776655030315",
+    "name": "Malik",
+    "email": "mazharabbasawan95@gmail.com",
+    "password": "$2b$10$jOaAuooZQO50OijJzRZFGO8O1iDrQid8hwdEP7Lk2vDyItx8qy9By",
+    "createdAt": "2026-04-20T03:17:10.315Z",
+    "updatedAt": "2026-04-20T03:17:10.315Z",
+    "passwordResetToken": "36b5aa49a830002fd435950ce4b73421266e756a94517dfba9262ffc9d08a50a",
+    "passwordResetExpires": 1776657683203
+  }
+]

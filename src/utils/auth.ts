@@ -1,46 +1,58 @@
 export const loginUser = async (email: string, password: string) => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
 
-  // For testing, accept any valid-looking email with password "password123"
-  // or check localStorage if they just signed up
-  const usersStr = localStorage.getItem('mockUsers');
-  const users = usersStr ? JSON.parse(usersStr) : [];
-  
-  const user = users.find((u: any) => u.email === email && u.password === password);
-  
-  if (user) {
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('token', token);
-    const userWithoutPassword = { name: user.name, email: user.email };
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    return { token, user: userWithoutPassword };
-  }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Login failed');
 
-  throw new Error('Invalid email or password');
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.data.user));
+  return data;
 };
 
 export const registerUser = async (name: string, email: string, password: string) => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  const response = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password })
+  });
 
-  const usersStr = localStorage.getItem('mockUsers');
-  const users = usersStr ? JSON.parse(usersStr) : [];
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Registration failed');
 
-  if (users.some((u: any) => u.email === email)) {
-    throw new Error('Email is already registered');
-  }
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.data.user));
+  return data;
+};
 
-  const newUser = { name, email, password };
-  users.push(newUser);
-  localStorage.setItem('mockUsers', JSON.stringify(users));
+export const forgotPassword = async (email: string) => {
+  const response = await fetch('/api/auth/forgotPassword', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
 
-  const token = 'mock-jwt-token-' + Date.now();
-  localStorage.setItem('token', token);
-  const userWithoutPassword = { name, email };
-  localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-  
-  return { token, user: userWithoutPassword };
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to send reset email');
+  return data;
+};
+
+export const resetPassword = async (token: string, password: string) => {
+  const response = await fetch(`/api/auth/resetPassword/${token}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Password reset failed');
+
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.data.user));
+  return data;
 };
 
 export const logoutUser = () => {

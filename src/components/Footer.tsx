@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export const Footer = () => {
   return (
     <footer className="py-12 px-4 border-t border-white/20 mt-12 bg-slate-50/50">
@@ -6,9 +8,9 @@ export const Footer = () => {
           &copy; 2026 EduMatch Pro. All Rights Reserved.
         </div>
         <div className="flex gap-8 text-[12px] text-slate-500 font-bold">
-          <a href="#" className="hover:text-blue-600 transition-colors uppercase tracking-widest">Terms</a>
-          <a href="#" className="hover:text-blue-600 transition-colors uppercase tracking-widest">Privacy</a>
-          <a href="#" className="hover:text-blue-600 transition-colors uppercase tracking-widest">Contact</a>
+          <Link to="/terms" className="hover:text-blue-600 transition-colors uppercase tracking-widest">Terms</Link>
+          <Link to="/privacy" className="hover:text-blue-600 transition-colors uppercase tracking-widest">Privacy</Link>
+          <Link to="/contact" className="hover:text-blue-600 transition-colors uppercase tracking-widest">Contact</Link>
         </div>
       </div>
     </footer>

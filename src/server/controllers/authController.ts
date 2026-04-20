@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
-import { User } from '../models/User';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
+import bcrypt from 'bcryptjs';
+import { UserLocal as User } from '../models/UserLocal';
 
 const signToken = (id: string) => {
   const secret: Secret = process.env.JWT_SECRET || 'fallback-secret-for-dev-only';
@@ -14,18 +19,27 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   const token = signToken(user._id);
 
   // Remove password from output
-  user.password = undefined;
+  const userSafe = { ...user };
+  delete userSafe.password;
 
   res.status(statusCode).json({
     status: 'success',
     token,
-    data: { user }
+    data: { user: userSafe }
   });
 };
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password } = req.body;
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      const error: any = new Error('Email already registered');
+      error.statusCode = 400;
+      return next(error);
+    }
 
     const newUser = await User.create({
       name,
@@ -43,24 +57,106 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   try {
     const { email, password } = req.body;
 
-    // 1) Check if email and password exist
     if (!email || !password) {
       const error: any = new Error('Please provide email and password');
       error.statusCode = 400;
       return next(error);
     }
 
-    // 2) Check if user exists && password is correct
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await (user as any).comparePassword(password))) {
+    const user: any = await User.findOne({ email });
+    if (!user || !(await user.comparePassword(password))) {
       const error: any = new Error('Incorrect email or password');
       error.statusCode = 401;
       return next(error);
     }
 
-    // 3) If everything ok, send token to client
     createSendToken(user, 200, res);
   } catch (error: any) {
     next(error);
   }
 };
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user: any = await User.findOne({ email: req.body.email });
+    if (!user) {
+      const error: any = new Error('There is no user with that email address.');
+      error.statusCode = 404;
+      return next(error);
+    }
+
+    const resetToken = user.createPasswordResetToken();
+    await user.save();
+
+    const resetURL = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.EMAIL_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `EduMatch Pro <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: 'Your password reset token (valid for 10 min)',
+      text: `Forgot your password? Reset it here: ${resetURL}`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #2563eb;">Password Reset Request</h2>
+          <p>Click the button below to set a new password. This link is valid for 10 minutes.</p>
+          <a href="${resetURL}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0;">Reset Password</a>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!'
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+
+    const users = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'users.json'), 'utf-8'));
+    const user: any = users.find((u: any) => 
+      u.passwordResetToken === hashedToken && 
+      u.passwordResetExpires > Date.now()
+    );
+
+    if (!user) {
+      const error: any = new Error('Token is invalid or has expired');
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(req.body.password, salt);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    
+    // Save updated user
+    const updatedUsers = users.map((u: any) => u._id === user._id ? user : u);
+    fs.writeFileSync(path.join(process.cwd(), 'data', 'users.json'), JSON.stringify(updatedUsers, null, 2));
+
+    createSendToken(user, 200, res);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
