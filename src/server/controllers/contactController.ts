@@ -19,9 +19,7 @@ export const sendContactEmail = async (req: Request, res: Response) => {
 
   // Configure transporter
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.EMAIL_PORT || "587"),
-    secure: false, // true for 465, false for other ports
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -48,26 +46,22 @@ export const sendContactEmail = async (req: Request, res: Response) => {
   };
 
   try {
-    // Only attempt to send if credentials are provided
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully!");
-    } else {
-      console.warn("\x1b[33m%s\x1b[0m", "WARNING: Email credentials not configured. Message logged to console instead.");
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error("Email credentials (EMAIL_USER/EMAIL_PASS) are not configured on the server.");
     }
+
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully!");
 
     res.status(200).json({
       status: "success",
       message: "Message received successfully"
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending email:", error);
-    // Even if email fails, we return success if we logged it (so user isn't stuck), 
-    // or we can return error if we want them to know delivery failed.
-    // Let's return error but ensure we logged the content.
     res.status(500).json({
       status: "error",
-      message: "Failed to send email, but your message has been logged. Please contact us directly if urgent."
+      message: error.message || "Failed to send email."
     });
   }
 };

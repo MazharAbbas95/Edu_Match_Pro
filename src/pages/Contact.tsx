@@ -13,7 +13,7 @@ export const Contact = () => {
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const response = await fetch("/api/contact", { 
+      const response = await fetch("/api/contact", {
         method: "POST",
         body: JSON.stringify(data),
         headers: {
@@ -36,7 +36,7 @@ export const Contact = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-12 pb-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
@@ -49,13 +49,13 @@ export const Contact = () => {
 
         <div className="max-w-3xl mx-auto">
           {/* Contact Form */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             className="glass-morphism p-8 md:p-12 rounded-[40px] border-white/60 shadow-2xl relative overflow-hidden"
           >
             {status === "success" ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="h-full flex flex-col items-center justify-center text-center space-y-4"
@@ -67,7 +67,7 @@ export const Contact = () => {
                 <p className="text-slate-500 max-w-sm">
                   Thank you for reaching out, Mazhar. We've received your message and will get back to you shortly.
                 </p>
-                <button 
+                <button
                   onClick={() => setStatus("idle")}
                   className="mt-6 text-blue-600 font-bold hover:underline"
                 >
@@ -79,8 +79,8 @@ export const Contact = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label htmlFor="name" className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       id="name"
                       name="name"
                       required
@@ -90,8 +90,8 @@ export const Contact = () => {
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="email" className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       id="email"
                       name="email"
                       required
@@ -103,8 +103,8 @@ export const Contact = () => {
 
                 <div className="space-y-2">
                   <label htmlFor="subject" className="text-sm font-bold text-slate-700 ml-1">Subject</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="subject"
                     name="subject"
                     required
@@ -115,7 +115,7 @@ export const Contact = () => {
 
                 <div className="space-y-2">
                   <label htmlFor="message" className="text-sm font-bold text-slate-700 ml-1">Message</label>
-                  <textarea 
+                  <textarea
                     id="message"
                     name="message"
                     required
@@ -125,7 +125,7 @@ export const Contact = () => {
                   ></textarea>
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={status === "loading"}
                   className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
