@@ -40,8 +40,11 @@ async function startServer() {
     console.warn("\x1b[33m%s\x1b[0m", "WARNING: MONGODB_URI is not defined.");
   } else {
     try {
-      await mongoose.connect(MONGODB_URI);
-      console.log("Connected to MongoDB successfully");
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000, // Fail fast if can't connect
+        socketTimeoutMS: 45000,
+      });
+      console.log("Connected to MongoDB Atlas successfully");
     } catch (err) {
       console.error("MongoDB connection error:", err);
     }
@@ -58,6 +61,13 @@ async function startServer() {
     res.json({ 
       status: "success", 
       message: "EduMatch Pro API is operative",
+      diagnostics: {
+        database_url_configured: !!process.env.MONGODB_URI,
+        email_user_configured: !!process.env.EMAIL_USER,
+        email_pass_configured: !!process.env.EMAIL_PASS,
+        node_env: process.env.NODE_ENV || 'not set',
+        database_connected: mongoose.connection.readyState === 1
+      },
       timestamp: new Date().toISOString()
     });
   });
