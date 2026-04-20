@@ -35,18 +35,21 @@ async function startServer() {
   }
 
   // 3. Database Connection (Switched to Local File Database)
+  let dbError = "";
   const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
     console.warn("\x1b[33m%s\x1b[0m", "WARNING: MONGODB_URI is not defined.");
+    dbError = "MONGODB_URI is missing";
   } else {
     try {
       await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000, // Fail fast if can't connect
+        serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
       });
       console.log("Connected to MongoDB Atlas successfully");
-    } catch (err) {
+    } catch (err: any) {
       console.error("MongoDB connection error:", err);
+      dbError = err.message || "Unknown connection error";
     }
   }
 
@@ -66,7 +69,8 @@ async function startServer() {
         email_user_configured: !!process.env.EMAIL_USER,
         email_pass_configured: !!process.env.EMAIL_PASS,
         node_env: process.env.NODE_ENV || 'not set',
-        database_connected: mongoose.connection.readyState === 1
+        database_connected: mongoose.connection.readyState === 1,
+        database_error: mongoose.connection.readyState === 1 ? null : dbError
       },
       timestamp: new Date().toISOString()
     });
