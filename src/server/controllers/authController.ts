@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { UserLocal as User } from '../models/UserLocal';
+import { User } from '../models/User';
 
 const signToken = (id: string) => {
   const secret: Secret = process.env.JWT_SECRET || 'fallback-secret-for-dev-only';
@@ -92,6 +92,9 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -130,11 +133,10 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
       .update(req.params.token)
       .digest('hex');
 
-    const users = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'users.json'), 'utf-8'));
-    const user: any = users.find((u: any) => 
-      u.passwordResetToken === hashedToken && 
-      u.passwordResetExpires > Date.now()
-    );
+    const user: any = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() }
+    });
 
     if (!user) {
       const error: any = new Error('Token is invalid or has expired');
@@ -142,15 +144,11 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
       return next(error);
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(req.body.password, salt);
+    // Set new password
+    user.password = req.body.password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    
-    // Save updated user
-    const updatedUsers = users.map((u: any) => u._id === user._id ? user : u);
-    fs.writeFileSync(path.join(process.cwd(), 'data', 'users.json'), JSON.stringify(updatedUsers, null, 2));
+    await user.save();
 
     createSendToken(user, 200, res);
   } catch (error: any) {

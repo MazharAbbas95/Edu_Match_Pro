@@ -13,6 +13,16 @@
     "email": "mazharabbasawan95@gmail.com",
     "password": "$2b$10$xVEOCgUfO7peqoAzU75HqeDzbrMiXHo3U.mFmNvtRlfkHf24BwBxO",
     "createdAt": "2026-04-20T03:17:10.315Z",
-    "updatedAt": "2026-04-20T03:17:10.315Z"
+    "updatedAt": "2026-04-20T03:17:10.315Z",
+    "passwordResetToken": "706960805deb98e17bf6347dc57469c1552a7d065602056028cc9217ac71760d",
+    "passwordResetExpires": 1776695692849
+  },
+  {
+    "_id": "1776695060799",
+    "name": "Test User",
+    "email": "mazharabbasawatestcomn95@gmail.com",
+    "password": "$2b$10$xswdNp7BnSV5/7UuF9UKTuMLSa6S4szOvU1.1YbngVPtJGlqU4jQm",
+    "createdAt": "2026-04-20T14:24:20.799Z",
+    "updatedAt": "2026-04-20T14:24:20.799Z"
   }
 ]

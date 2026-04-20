@@ -35,7 +35,6 @@ async function startServer() {
   }
 
   // 3. Database Connection (Switched to Local File Database)
-  /*
   const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
     console.warn("\x1b[33m%s\x1b[0m", "WARNING: MONGODB_URI is not defined.");
@@ -47,8 +46,6 @@ async function startServer() {
       console.error("MongoDB connection error:", err);
     }
   }
-  */
-  console.log("\x1b[32m%s\x1b[0m", "Using Local File Database (data/users.json)");
 
   // 4. API Routes
   app.use("/api/auth", authRoutes);
