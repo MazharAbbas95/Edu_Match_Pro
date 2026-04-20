@@ -14,7 +14,7 @@
     "password": "$2b$10$jOaAuooZQO50OijJzRZFGO8O1iDrQid8hwdEP7Lk2vDyItx8qy9By",
     "createdAt": "2026-04-20T03:17:10.315Z",
     "updatedAt": "2026-04-20T03:17:10.315Z",
-    "passwordResetToken": "36b5aa49a830002fd435950ce4b73421266e756a94517dfba9262ffc9d08a50a",
-    "passwordResetExpires": 1776657683203
+    "passwordResetToken": "e3742e53629edfc137a98795092195581b7f4930330be6b047a6d9e6d30e2467",
+    "passwordResetExpires": 1776658222663
   }
 ]
