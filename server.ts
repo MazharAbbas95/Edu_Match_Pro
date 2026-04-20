@@ -43,8 +43,9 @@ async function startServer() {
   } else {
     try {
       await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
+        family: 4, // Force IPv4 to avoid Google Cloud IPv6 issues
       });
       console.log("Connected to MongoDB Atlas successfully");
     } catch (err: any) {
