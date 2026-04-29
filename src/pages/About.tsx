@@ -7,29 +7,82 @@ export const About = () => {
       <div className="max-w-5xl mx-auto space-y-20">
         
         {/* Header Profile */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <div className="relative inline-block mb-6">
-            <div className="w-40 h-40 rounded-full border-8 border-white shadow-2xl overflow-hidden mx-auto bg-blue-50">
-              <img 
-                src="/mazhar.png" 
-                alt="Mazhar Abbas" 
-                className="w-full h-full object-cover object-[center_10%]"
-              />
+        <div className="mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
+            <div className="relative inline-block mb-6">
+              <div className="w-40 h-40 rounded-full border-8 border-white shadow-2xl overflow-hidden mx-auto bg-blue-50">
+                <img 
+                  src="/mazhar.png" 
+                  alt="Mazhar Abbas" 
+                  className="w-full h-full object-cover object-[center_10%]"
+                />
+              </div>
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap shadow-xl">
+                Project Lead
+              </div>
             </div>
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap shadow-xl">
-              Project Lead
-            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Mazhar Abbas</h1>
+            <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+              A 4th-semester Bachelor student on a mission to empower students through data-driven career selection, rigorous university entry test preparation, and advanced ISSB interview simulations.
+            </p>
+          </motion.div>
+
+          {/* Team Members */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-12">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-center glass-morphism p-8 rounded-[32px] border-white/60 hover:shadow-xl transition-all"
+            >
+              <div className="relative inline-block mb-4">
+                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden mx-auto bg-blue-50">
+                  <img 
+                    src="/sadam hussain.jpg.png" 
+                    alt="Sadam Hussain" 
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md">
+                  Team Member
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Sadam Hussain</h3>
+              <p className="text-slate-500 text-sm">
+                Contributing to the development and success of EduMatch Pro.
+              </p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center glass-morphism p-8 rounded-[32px] border-white/60 hover:shadow-xl transition-all"
+            >
+              <div className="relative inline-block mb-4">
+                <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden mx-auto bg-blue-50">
+                  <img 
+                    src="/tayyab akhtar.jpg.png" 
+                    alt="Tayyab Akhtar" 
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md">
+                  Team Member
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Tayyab Akhtar</h3>
+              <p className="text-slate-500 text-sm">
+                Contributing to the development and success of EduMatch Pro.
+              </p>
+            </motion.div>
           </div>
-          
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Mazhar Abbas</h1>
-          <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            A 4th-semester Bachelor student on a mission to empower students through data-driven career selection, rigorous university entry test preparation, and advanced ISSB interview simulations.
-          </p>
-        </motion.div>
+        </div>
 
         {/* Modules Section */}
         <div className="space-y-16">

@@ -115,7 +115,10 @@ async function handleForgotPassword(req, res) {
   user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   saveUsers(users);
 
-  const resetURL = `${process.env.APP_URL || "http://localhost:3000"}/reset-password/${resetToken}`;
+  const protocol = req.headers['x-forwarded-proto'] || 'http';
+  const host = req.headers.host || 'localhost:3000';
+  const defaultUrl = `${protocol}://${host}`;
+  const resetURL = `${process.env.APP_URL || defaultUrl}/reset-password/${resetToken}`;
 
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || "smtp.gmail.com",

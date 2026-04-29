@@ -88,7 +88,8 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const resetToken = user.createPasswordResetToken();
     await user.save();
 
-    const resetURL = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    const baseUrl = process.env.APP_URL || 'https://edu-match-pro-718912645052.asia-south1.run.app/';
+    const resetURL = `${baseUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
