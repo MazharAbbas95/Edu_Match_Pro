@@ -3,6 +3,18 @@ import { motion, AnimatePresence } from 'motion/react';
 import { generateECATQuestions } from './aiService';
 import { ArrowRight, Loader2, CheckCircle2, XCircle, Trophy } from 'lucide-react';
 
+async function readApiResponse(response: Response) {
+  const text = await response.text();
+  if (!text) {
+    return { status: 'error', message: `API request failed with status ${response.status}` };
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { status: 'error', message: `API returned a non-JSON response with status ${response.status}` };
+  }
+}
+
 export const AdaptiveTest = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
@@ -38,7 +50,7 @@ export const AdaptiveTest = () => {
         method: 'POST', 
         headers: getHeaders() 
       });
-      const data = await res.json();
+      const data = await readApiResponse(res);
       if (data.status === 'success') {
         setSessionId(data.data._id);
         fetchNextQuestion(data.data._id);
@@ -55,7 +67,7 @@ export const AdaptiveTest = () => {
     
     try {
       const res = await fetch(`/api/test/next?sessionId=${sid}`, { headers: getHeaders() });
-      const data = await res.json();
+      const data = await readApiResponse(res);
       
       if (data.needsGeneration) {
         setIsGenerating(true);
@@ -97,7 +109,7 @@ export const AdaptiveTest = () => {
           answerIndex: selectedAnswer
         })
       });
-      const data = await res.json();
+      const data = await readApiResponse(res);
       setFeedback(data.data);
       setProgress((data.data.totalAnswered / 15) * 100);
       
