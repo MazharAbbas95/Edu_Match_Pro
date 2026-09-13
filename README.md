@@ -31,3 +31,20 @@ GEMINI_API_KEY=your_gemini_api_key
 3. Set up environment variables.
 4. Start development server: `npm run dev`
 5. Build for production: `npm run build`
+
+## Vercel deployment
+
+Configure these variables in Vercel Project Settings -> Environment Variables. Vercel cannot connect to a MySQL server running on your local computer, so `DATABASE_URL` must point to a hosted MySQL database.
+
+```env
+DATABASE_URL=mysql://user:password@host:3306/edu_match_pro
+JWT_SECRET=use-a-long-random-secret
+JWT_EXPIRES_IN=90d
+APP_URL=https://edu-match-pro.vercel.app
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your.gmail.address@gmail.com
+EMAIL_PASS=your-16-character-gmail-app-password
+```
+
+After saving the variables, redeploy the latest commit. Verify the deployment at `/api/health`; it should return `database_connected: true`.
