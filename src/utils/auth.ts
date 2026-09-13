@@ -5,7 +5,7 @@ export const loginUser = async (email: string, password: string) => {
     body: JSON.stringify({ email, password })
   });
 
-  const data = await response.json();
+  const data = await parseResponse(response);
   if (!response.ok) throw new Error(data.message || 'Login failed');
 
   localStorage.setItem('token', data.token);
@@ -20,7 +20,7 @@ export const registerUser = async (name: string, email: string, password: string
     body: JSON.stringify({ name, email, password })
   });
 
-  const data = await response.json();
+  const data = await parseResponse(response);
   if (!response.ok) throw new Error(data.message || 'Registration failed');
 
   localStorage.setItem('token', data.token);
@@ -35,19 +35,19 @@ export const forgotPassword = async (email: string) => {
     body: JSON.stringify({ email })
   });
 
-  const data = await response.json();
+  const data = await parseResponse(response);
   if (!response.ok) throw new Error(data.message || 'Failed to send reset email');
   return data;
 };
 
 export const resetPassword = async (token: string, password: string) => {
-  const response = await fetch(`/api/auth/resetPassword/${token}`, {
+  const response = await fetch(`/api/auth/resetPassword/${encodeURIComponent(token)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password })
   });
 
-  const data = await response.json();
+  const data = await parseResponse(response);
   if (!response.ok) throw new Error(data.message || 'Password reset failed');
 
   localStorage.setItem('token', data.token);
@@ -64,3 +64,12 @@ export const getCurrentUser = () => {
   const userStr = localStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
+
+async function parseResponse(response: Response) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return { message: text || 'The server returned an invalid response' };
+  }
+}

@@ -88,22 +88,31 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const resetToken = user.createPasswordResetToken();
     await user.save();
 
-    const baseUrl = process.env.APP_URL || 'https://edu-match-pro-718912645052.asia-south1.run.app/';
+    const configuredAppUrl = process.env.APP_URL?.trim();
+    const requestBaseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = configuredAppUrl && configuredAppUrl !== 'MY_APP_URL'
+      ? configuredAppUrl
+      : requestBaseUrl;
     const resetURL = `${baseUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
+    const emailUser = process.env.EMAIL_USER?.trim();
+    const emailPass = process.env.EMAIL_PASS?.replace(/\s+/g, '');
+    if (!emailUser || !emailPass) {
+      const error: any = new Error('Email service is not configured. Set EMAIL_USER and EMAIL_PASS in .env.');
+      error.statusCode = 503;
+      return next(error);
+    }
+
+    const emailPort = Number(process.env.EMAIL_PORT || 587);
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: emailPort,
+      secure: emailPort === 465,
+      auth: { user: emailUser, pass: emailPass },
     });
 
     const mailOptions = {
-      from: `EduMatch Pro <${process.env.EMAIL_USER}>`,
+      from: `EduMatch Pro <${emailUser}>`,
       to: user.email,
       subject: 'Your password reset token (valid for 10 min)',
       text: `Forgot your password? Reset it here: ${resetURL}`,
@@ -123,6 +132,10 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       message: 'Token sent to email!'
     });
   } catch (err: any) {
+    if (err?.code === 'EAUTH' || err?.responseCode === 534) {
+      err.statusCode = 503;
+      err.message = 'Gmail requires an App Password. Create one for EMAIL_USER and put it in EMAIL_PASS.';
+    }
     next(err);
   }
 };

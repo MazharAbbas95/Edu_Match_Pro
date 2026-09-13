@@ -43,29 +43,11 @@ export const getNextQuestion = async (req: Request, res: Response, next: NextFun
     const answeredIds = session.history.map(h => h.questionId);
 
     // Fetch a question matching current difficulty
-    const results = await TestQuestion.aggregate([
-      { 
-        $match: { 
-          difficulty: session.currentDifficulty, 
-          _id: { $nin: answeredIds } 
-        } 
-      },
-      { $sample: { size: 1 } }
-    ]);
-
-    let question = results[0];
+    let question = await TestQuestion.findRandom(session.currentDifficulty, answeredIds);
 
     // If no more questions of current difficulty, try any difficulty not answered
     if (!question) {
-      const backupResults = await TestQuestion.aggregate([
-        { 
-          $match: { 
-            _id: { $nin: answeredIds } 
-          } 
-        },
-        { $sample: { size: 1 } }
-      ]);
-      question = backupResults[0];
+      question = await TestQuestion.findRandom('any', answeredIds);
     }
 
     if (!question) {
@@ -168,7 +150,7 @@ export const addQuestions = async (req: Request, res: Response, next: NextFuncti
     res.status(201).json({ status: 'success', message: 'Questions added to bank' });
   } catch (error: any) {
     // Handle duplicate key error manually if needed, or just return success if some were added
-    if (error.code === 11000) {
+    if (error.code === 1062) {
        return res.status(201).json({ status: 'success', message: 'Some questions added, some skipped as duplicates' });
     }
     next(error);

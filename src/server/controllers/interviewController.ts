@@ -59,7 +59,7 @@ export const saveExchange = async (req: Request, res: Response, next: NextFuncti
 export const getLatestInterview = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user?._id;
-    const session = await InterviewSession.findOne({ user: userId }).sort({ createdAt: -1 });
+    const session = await InterviewSession.findOne({ user: userId });
     
     res.status(200).json({ status: 'success', data: session });
   } catch (error) {

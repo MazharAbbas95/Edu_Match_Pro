@@ -1,22 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import fs from "fs";
-
-const DB_PATH = "/tmp/users.json";
-
-function getUsers() {
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
-    }
-  } catch {}
-  return [];
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(users, null, 2));
-}
+import { getPool } from "../../_db.js";
 
 function signToken(id) {
   return jwt.sign({ id }, process.env.JWT_SECRET || "fallback-secret-for-dev-only", {
@@ -30,14 +15,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { token } = req.query;
-    const { password } = req.body;
+    const tokenValue = Array.isArray(req.query.token) ? req.query.token[0] : req.query.token;
+    const { password } = req.body || {};
 
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    const users = getUsers();
-    const user = users.find(
-      (u) => u.passwordResetToken === hashedToken && u.passwordResetExpires > Date.now()
-    );
+    if (!tokenValue || !password || password.length < 8) {
+      return res.status(400).json({ status: "error", message: "A valid token and password of at least 8 characters are required" });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(tokenValue).digest("hex");
+    const pool = getPool();
+    const [rows] = await pool.query("SELECT * FROM users WHERE password_reset_token = ? AND password_reset_expires > NOW() LIMIT 1", [hashedToken]);
+    const user = rows[0] && { ...rows[0], _id: rows[0].id };
 
     if (!user) {
       return res.status(400).json({ status: "error", message: "Token is invalid or has expired" });
@@ -45,9 +33,7 @@ export default async function handler(req, res) {
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    saveUsers(users);
+    await pool.query("UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?", [user.password, user.id]);
 
     const jwtToken = signToken(user._id);
     const { password: _, ...userSafe } = user;

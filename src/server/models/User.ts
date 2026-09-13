@@ -1,58 +1,44 @@
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { execute, query } from '../db';
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please provide your name'],
-    trim: true
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide your email'],
-    unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: [8, 'Password must be at least 8 characters long'],
-    select: false // Don't return password by default
-  },
-  passwordResetToken: String,
-  passwordResetExpires: Date
-}, {
-  timestamps: true
-});
+function mapUser(row: any): any {
+  const user: any = { _id: row.id, name: row.name, email: row.email, password: row.password, passwordResetToken: row.password_reset_token, passwordResetExpires: row.password_reset_expires, createdAt: row.created_at, updatedAt: row.updated_at };
+  user.comparePassword = (password: string) => bcrypt.compare(password, user.password);
+  user.createPasswordResetToken = () => {
+    const token = crypto.randomBytes(32).toString('hex');
+    user.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
+    user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+    return token;
+  };
+  user.save = async () => {
+    if (user.password && !user.password.startsWith('$2')) user.password = await bcrypt.hash(user.password, 10);
+    await execute('UPDATE users SET name = ?, email = ?, password = ?, password_reset_token = ?, password_reset_expires = ? WHERE id = ?', [user.name, user.email, user.password, user.passwordResetToken || null, user.passwordResetExpires || null, user._id]);
+    return user;
+  };
+  return user;
+}
 
-// Hash password before saving
-userSchema.pre('save', async function() {
-  if (!this.isModified('password') || !this.password) return;
-  
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password as string, salt);
-});
+export class User {
+  static async findOne(filter: any) {
+    let sql = 'SELECT * FROM users WHERE 1=1';
+    const values: unknown[] = [];
+    if (filter.email !== undefined) { sql += ' AND email = ?'; values.push(String(filter.email).toLowerCase()); }
+    if (filter.passwordResetToken !== undefined) { sql += ' AND password_reset_token = ?'; values.push(filter.passwordResetToken); }
+    if (filter.passwordResetExpires?.$gt !== undefined) { sql += ' AND password_reset_expires > ?'; values.push(new Date(filter.passwordResetExpires.$gt)); }
+    const rows = await query<any[]>(`${sql} LIMIT 1`, values);
+    return rows[0] ? mapUser(rows[0]) : null;
+  }
 
-// Method to verify password
-userSchema.methods.comparePassword = async function(candidatePassword: string) {
-  if (!this.password) return false;
-  return await bcrypt.compare(candidatePassword, this.password);
-};
+  static async findById(id: string) {
+    const rows = await query<any[]>('SELECT * FROM users WHERE id = ? LIMIT 1', [id]);
+    return rows[0] ? mapUser(rows[0]) : null;
+  }
 
-userSchema.methods.createPasswordResetToken = function() {
-  const resetToken = crypto.randomBytes(32).toString('hex');
-
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  return resetToken;
-};
-
-export const User = mongoose.model('User', userSchema);
+  static async create(data: { name: string; email: string; password: string }) {
+    const id = crypto.randomUUID();
+    const password = await bcrypt.hash(data.password, 10);
+    await execute('INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)', [id, data.name, data.email.toLowerCase(), password]);
+    return this.findById(id);
+  }
+}

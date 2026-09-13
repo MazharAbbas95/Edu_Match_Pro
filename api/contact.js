@@ -5,14 +5,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ status: "error", message: "Method not allowed" });
   }
 
-  const { name, email, subject, message } = req.body;
+  const { name, email, subject, message } = req.body || {};
 
-  if (!name || !email || !subject || !message) {
+  if (!name?.trim() || !email?.trim() || !/^\S+@\S+\.\S+$/.test(email) || !subject?.trim() || !message?.trim()) {
     return res.status(400).json({ status: "error", message: "Missing required fields" });
   }
 
   // 1. Check if variables exist
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  const emailUser = process.env.EMAIL_USER?.trim();
+  const emailPass = process.env.EMAIL_PASS?.replace(/\s+/g, '');
+  if (!emailUser || !emailPass) {
     console.error("CRITICAL: EMAIL_USER or EMAIL_PASS not set in Environment Variables");
     return res.status(500).json({ 
       status: "error", 
@@ -20,16 +22,16 @@ export default async function handler(req, res) {
     });
   }
 
+  const emailPort = Number(process.env.EMAIL_PORT || 587);
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Using 'service' is more reliable for Gmail
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: emailPort,
+    secure: emailPort === 465,
+    auth: { user: emailUser, pass: emailPass },
   });
 
   const mailOptions = {
-    from: `"EduMatch Pro Contact" <${process.env.EMAIL_USER}>`,
+    from: `"EduMatch Pro Contact" <${emailUser}>`,
     to: "mazharabbasawan95@gmail.com",
     replyTo: email,
     subject: `Contact Form: ${subject}`,
@@ -51,9 +53,12 @@ export default async function handler(req, res) {
     return res.status(200).json({ status: "success", message: "Email sent successfully!" });
   } catch (error) {
     console.error("Nodemailer Error:", error);
+    const message = error?.code === "EAUTH" || error?.responseCode === 534
+      ? "Gmail requires an App Password. Create one for EMAIL_USER and put it in EMAIL_PASS."
+      : "Failed to send email. Check your SMTP credentials.";
     return res.status(500).json({ 
       status: "error", 
-      message: "Failed to send email. Check your Gmail App Password." 
+      message
     });
   }
 }

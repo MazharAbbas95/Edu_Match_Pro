@@ -1,12 +1,11 @@
 import express, { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
-import net from "net";
 import { fileURLToPath } from "url";
+import { pool } from "./src/server/db";
 import { createServer as createViteServer } from "vite";
 import authRoutes from "./src/server/routes/authRoutes";
 import assessmentRoutes from "./src/server/routes/assessmentRoutes";
@@ -14,14 +13,14 @@ import testRoutes from "./src/server/routes/testRoutes";
 import interviewRoutes from "./src/server/routes/interviewRoutes";
 import contactRoutes from "./src/server/routes/contactRoutes";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
+  const PORT = Number(process.env.PORT || 3000);
 
   // 1. Security Middleware
   app.use(helmet({
@@ -37,22 +36,14 @@ async function startServer() {
 
   // 3. Database Connection
   let dbError = "";
-  const MONGODB_URI = process.env.MONGODB_URI;
-  if (!MONGODB_URI) {
-    console.warn("\x1b[33m%s\x1b[0m", "WARNING: MONGODB_URI is not defined.");
-    dbError = "MONGODB_URI is missing";
-  } else {
-    try {
-      await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 45000,
-        family: 4, // Force IPv4 for Google Cloud stability
-      });
-      console.log("Connected to MongoDB Atlas successfully");
-    } catch (err: any) {
-      console.error("MongoDB connection error:", err);
-      dbError = err.message || "Unknown connection error";
-    }
+  try {
+    await pool.query("SELECT 1");
+    console.log("Connected to MySQL successfully");
+  } catch (err: any) {
+    console.error("MySQL connection error:", err);
+    dbError = err.message || "Unknown connection error";
+    console.error("Set MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, and MYSQL_HOST in .env, then restart the server.");
+    return;
   }
 
   // 4. API Routes
@@ -63,27 +54,19 @@ async function startServer() {
   app.use("/api/contact", contactRoutes);
 
   app.get("/api/health", async (req, res) => {
-    // Attempt a raw TCP ping to the host
-    const pingHost = "ac-p5v6x1m-shard-00-00.jamu47g.mongodb.net";
-    const canReachHost = await new Promise((resolve) => {
-      const socket = net.createConnection(27017, pingHost);
-      socket.setTimeout(3000);
-      socket.on("connect", () => { socket.destroy(); resolve(true); });
-      socket.on("error", () => { socket.destroy(); resolve(false); });
-      socket.on("timeout", () => { socket.destroy(); resolve(false); });
-    });
+    let databaseConnected = false;
+    try { await pool.query("SELECT 1"); databaseConnected = true; } catch { databaseConnected = false; }
 
     res.json({ 
       status: "success", 
       message: "EduMatch Pro API is operative",
       diagnostics: {
-        database_url_configured: !!process.env.MONGODB_URI,
+        database_url_configured: !!(process.env.DATABASE_URL || process.env.MYSQL_HOST || process.env.MYSQL_DATABASE),
         email_user_configured: !!process.env.EMAIL_USER,
         email_pass_configured: !!process.env.EMAIL_PASS,
         node_env: process.env.NODE_ENV || 'not set',
-        database_connected: mongoose.connection.readyState === 1,
-        database_reachable_tcp: canReachHost,
-        database_error: mongoose.connection.readyState === 1 ? null : dbError
+        database_connected: databaseConnected,
+        database_error: databaseConnected ? null : dbError
       },
       timestamp: new Date().toISOString()
     });

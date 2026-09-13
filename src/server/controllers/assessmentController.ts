@@ -102,7 +102,7 @@ export const getLatestAssessment = async (req: Request, res: Response, next: Nex
       return next(error);
     }
 
-    const assessment = await Assessment.findOne({ user: userId }).sort({ createdAt: -1 });
+    const assessment = await Assessment.findOne({ user: userId });
 
     res.status(200).json({
       status: 'success',

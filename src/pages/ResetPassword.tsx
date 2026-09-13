@@ -28,7 +28,7 @@ export const ResetPassword = () => {
       window.dispatchEvent(new Event('auth-change'));
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Reset failed');
+      setError(err.message || 'This reset link is invalid or the reset service is unavailable. Request a new link and try again.');
     } finally {
       setIsLoading(false);
     }

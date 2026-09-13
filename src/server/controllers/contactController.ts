@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import nodemailer from "nodemailer";
 
 export const sendContactEmail = async (req: Request, res: Response) => {
-  const { name, email, subject, message } = req.body;
+  const { name, email, subject, message } = req.body || {};
 
   // Basic validation
   if (!name || !email || !subject || !message) {
@@ -18,19 +18,22 @@ export const sendContactEmail = async (req: Request, res: Response) => {
   console.log(`Message: ${message}`);
 
   // Configure transporter
+  const emailUser = process.env.EMAIL_USER?.trim();
+  const emailPass = process.env.EMAIL_PASS?.replace(/\s+/g, '');
+  if (!emailUser || !emailPass) {
+    return res.status(503).json({ status: 'error', message: 'Email service is not configured on the server.' });
+  }
+
+  const emailPort = Number(process.env.EMAIL_PORT || 587);
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: emailPort,
+    secure: emailPort === 465,
+    auth: { user: emailUser, pass: emailPass },
   });
 
   const mailOptions = {
-    from: `"${name}" <${process.env.EMAIL_USER}>`, // Most providers require 'from' to be the authenticated user
+    from: `"${name}" <${emailUser}>`, // Most providers require 'from' to be the authenticated user
     to: "mazharabbasawan95@gmail.com",
     replyTo: email,
     subject: `Contact Form: ${subject}`,
@@ -49,10 +52,6 @@ export const sendContactEmail = async (req: Request, res: Response) => {
   };
 
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error("Email credentials (EMAIL_USER/EMAIL_PASS) are not configured on the server.");
-    }
-
     await transporter.sendMail(mailOptions);
     console.log("Email sent successfully!");
 
@@ -62,9 +61,12 @@ export const sendContactEmail = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error sending email:", error);
+    const message = error?.code === 'EAUTH' || error?.responseCode === 534
+      ? 'Gmail requires an App Password. Create one for EMAIL_USER and put it in EMAIL_PASS.'
+      : error.message || "Failed to send email.";
     res.status(500).json({
       status: "error",
-      message: error.message || "Failed to send email."
+      message
     });
   }
 };

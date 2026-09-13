@@ -25,3 +25,13 @@ export const loginValidator = [
   body('password').notEmpty().withMessage('Password is required'),
   validateRequest
 ];
+
+export const forgotPasswordValidator = [
+  body('email').isEmail().withMessage('Please provide a valid email address').normalizeEmail(),
+  validateRequest
+];
+
+export const resetPasswordValidator = [
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+  validateRequest
+];

@@ -1,11 +1,13 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { motion } from "motion/react";
 import { Mail, Send, MapPin, Phone, CheckCircle } from "lucide-react";
 
 export const Contact = () => {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("Something went wrong. Please try again or email us directly.");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus("loading");
 
@@ -22,13 +24,16 @@ export const Contact = () => {
         }
       });
 
-      if (response.ok) {
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result.status === "success") {
         setStatus("success");
         (e.target as HTMLFormElement).reset();
       } else {
+        setErrorMessage(result.message || "Contact request failed");
         setStatus("error");
       }
     } catch (error) {
+      setErrorMessage("The server could not be reached. Please try again.");
       setStatus("error");
     }
   };
@@ -140,7 +145,7 @@ export const Contact = () => {
 
                 {status === "error" && (
                   <p className="text-red-500 text-center text-sm font-medium">
-                    Something went wrong. Please try again or email us directly.
+                    {errorMessage}
                   </p>
                 )}
               </form>
